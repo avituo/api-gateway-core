@@ -16,12 +16,12 @@ spring:
         - id: product-service
           uri: http://host.docker.internal:8001
           predicates:
-            - Path=/api/products/**
+            - Path=/api/v1/products/**
 
         - id: order-service
           uri: http://host.docker.internal:8002
           predicates:
-            - Path=/api/orders/**
+            - Path=/api/v1/orders/**
 
 management:
   endpoints:
@@ -30,9 +30,12 @@ management:
         include: health,info
 
 app:
+  gateway:
+    key: ${GATEWAY_INTERNAL_KEY}
   jwt:
     secret: ${JWT_SECRET}
-    issuer-uri: ${JWT_ISSUER_URI:}
+    issuer: ${JWT_ISSUER:http://auth-service:8003}
+    audience: ${JWT_AUDIENCE:tcc-api-gateway}
     public-paths:
       - /actuator/health
       - /api/auth/**

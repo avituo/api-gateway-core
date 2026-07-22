@@ -9,7 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class JwtProperties {
 
     private String secret;
-    private String issuerUri;
+    private String issuer;
+    private String audience;
     private List<String> publicPaths = new ArrayList<>();
 
     public String getSecret() {
@@ -20,12 +21,20 @@ public class JwtProperties {
         this.secret = secret;
     }
 
-    public String getIssuerUri() {
-        return issuerUri;
+    public String getIssuer() {
+        return issuer;
     }
 
-    public void setIssuerUri(String issuerUri) {
-        this.issuerUri = issuerUri;
+    public void setIssuer(String issuer) {
+        this.issuer = issuer;
+    }
+
+    public String getAudience() {
+        return audience;
+    }
+
+    public void setAudience(String audience) {
+        this.audience = audience;
     }
 
     public List<String> getPublicPaths() {

@@ -21,11 +21,14 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureWebTestClient
 @Import(SecurityIntegrationTest.TestController.class)
 @TestPropertySource(properties = {
         "app.jwt.secret=tests_secret_key_for_hs256_auth_12345",
+        "app.jwt.issuer=https://auth.example.test",
+        "app.jwt.audience=tcc-api-gateway",
+        "app.gateway.key=test-gateway-internal-key",
         "app.jwt.public-paths[0]=/public/**",
         "app.jwt.public-paths[1]=/actuator/health"
 })
@@ -47,28 +50,33 @@ class SecurityIntegrationTest {
     @Test
     void shouldBlockPrivateEndpointWithoutToken() {
         webTestClient.get()
-                .uri("/private/ping")
+                .uri("/api/v1/orders/ping")
                 .exchange()
                 .expectStatus().isUnauthorized();
     }
 
     @Test
-    void shouldAllowPrivateEndpointWithValidJwt() throws JOSEException {
+    void shouldDenyUnknownEndpointEvenWithValidJwt() throws JOSEException {
         webTestClient.get()
                 .uri("/private/ping")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + generateToken("gateway-user"))
                 .exchange()
-                .expectStatus().isOk()
-                .expectBody(String.class).isEqualTo("private-ok");
+                .expectStatus().isForbidden();
     }
 
     private String generateToken(String subject) throws JOSEException {
         Instant now = Instant.now();
         JWTClaimsSet claims = new JWTClaimsSet.Builder()
+                .issuer("https://auth.example.test")
+                .audience("tcc-api-gateway")
                 .subject(subject)
+                .jwtID("test-jti")
                 .issueTime(Date.from(now))
+                .notBeforeTime(Date.from(now))
                 .expirationTime(Date.from(now.plusSeconds(300)))
-                .claim("scope", "gateway.read")
+                .claim("email", "user@example.test")
+                .claim("name", "Gateway User")
+                .claim("roles", java.util.List.of("user"))
                 .build();
 
         SignedJWT signedJWT = new SignedJWT(new JWSHeader(JWSAlgorithm.HS256), claims);
