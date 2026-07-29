@@ -19,9 +19,10 @@ import reactor.core.publisher.Mono;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
-class UserHeaderFilterTest {
+class GatewayIdentityForwardingFilterTest {
 
-    private final GlobalFilter filter = new UserHeaderFilter("test-gateway-internal-key").addUserHeaders();
+    private final GlobalFilter filter = new GatewayIdentityForwardingFilter("test-gateway-internal-key")
+            .forwardGatewayIdentity();
 
     @Test
     void removesSpoofedIdentityHeadersFromUnauthenticatedRequests() {
@@ -30,7 +31,7 @@ class UserHeaderFilterTest {
                 .header("x-user-email", "attacker@example.test")
                 .header("X-Internal-Signature", "forged"));
 
-        UserHeaderFilter.INTERNAL_HEADERS.forEach(header ->
+        GatewayIdentityForwardingFilter.FORWARDED_HEADERS.forEach(header ->
                 assertFalse(forwarded.getRequest().getHeaders().containsKey(header)));
     }
 
@@ -55,7 +56,7 @@ class UserHeaderFilterTest {
         );
         TestingAuthenticationToken authentication = new TestingAuthenticationToken(jwt, null);
         authentication.setAuthenticated(true);
-        var exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/orders")
+        var exchange = MockServerWebExchange.from(MockServerHttpRequest.get("/api/v1/orders")
                 .header("X-User-Id", "attacker", "another-attacker")
                 .header("X-User-Roles", "superadmin"));
 

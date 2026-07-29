@@ -10,23 +10,22 @@ import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 @Component
-public class LoggingFilter implements GlobalFilter {
+public class RequestLoggingFilter implements GlobalFilter {
 
-    private static final Logger logger = LoggerFactory.getLogger(LoggingFilter.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RequestLoggingFilter.class);
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
         long startTime = System.currentTimeMillis();
-
         String method = exchange.getRequest().getMethod().name();
         String path = exchange.getRequest().getPath().value();
 
-        logger.info("Gateway request received: method={}, path={}", method, path);
+        LOGGER.info("Gateway request received: method={}, path={}", method, path);
 
         return chain.filter(exchange).then(Mono.fromRunnable(() -> {
             long duration = System.currentTimeMillis() - startTime;
 
-            logger.info(
+            LOGGER.info(
                     "Gateway response returned: method={}, path={}, status={}, durationMs={}",
                     method,
                     path,
