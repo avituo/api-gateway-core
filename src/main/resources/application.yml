@@ -9,17 +9,17 @@ spring:
     gateway:
       routes:
         - id: auth-service
-          uri: http://host.docker.internal:8003
+          uri: http://tcc-auth-service:8003
           predicates:
             - Path=/api/v1/auth/**
 
         - id: product-service
-          uri: http://host.docker.internal:8001
+          uri: http://tcc-product-service:8001
           predicates:
             - Path=/api/v1/products/**
 
         - id: order-service
-          uri: http://host.docker.internal:8002
+          uri: http://tcc-order-service:8002
           predicates:
             - Path=/api/v1/orders/**
 
@@ -34,7 +34,7 @@ app:
     key: ${GATEWAY_INTERNAL_KEY:verysecretkeythatshouldbechanged}
   jwt:
     secret: ${JWT_SECRET:I1bXzWRjypm4dfjCnXTuEkjX2kjPdA9oatgHHkyqLuK}
-    issuer: ${JWT_ISSUER:http://auth-service:8003}
+    issuer: ${JWT_ISSUER:http://tcc-auth-service:8003}
     audience: ${JWT_AUDIENCE:tcc-api-gateway}
     public-paths:
       - /actuator/health
